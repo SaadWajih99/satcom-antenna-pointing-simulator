@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#111b25" />
-    <meta name="description" content="Phase 1 AZ/EL antenna visualization for an interactive SATCOM pointing simulator." />
-    <title>SATCOM Pointing Test Bench | Phase 01</title>
+    <meta name="description" content="Interactive two-axis SATCOM antenna pointing, fault-injection, health, and safety simulator." />
+    <title>SATCOM Pointing Test Bench</title>
     <link rel="stylesheet" href="src/styles.css" />
     <script type="module" src="src/main.js"></script>
   </head>
@@ -16,182 +16,100 @@
           <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
           <span class="brand-copy"><strong>FIELD SYSTEMS</strong><small>CONTROL ENGINEERING</small></span>
         </a>
-        <div class="project-name">
-          <span class="eyebrow">GROUND TERMINAL / POINTING SYSTEM</span>
-          <h1>SATCOM antenna test bench</h1>
-        </div>
-        <div class="phase-tag"><span class="status-dot"></span><span>PHASE 01 <b>/</b> VISUALIZATION</span></div>
+        <div class="project-name"><span class="eyebrow">GROUND TERMINAL / POINTING SYSTEM</span><h1>SATCOM antenna test bench</h1></div>
+        <div class="top-state"><span class="eyebrow">SYSTEM</span><strong id="system-state-badge" class="state-badge normal">NORMAL</strong></div>
+        <div class="top-health"><span class="eyebrow">OVERALL HEALTH</span><strong id="overall-health" class="health-badge green">GREEN</strong></div>
       </header>
 
       <main id="main" class="dashboard">
-        <section class="intro-row" aria-label="Project summary">
-          <div>
-            <p class="eyebrow">AZIMUTH + ELEVATION</p>
-            <h2>Pointing geometry</h2>
-          </div>
-          <p class="scope-note"><span class="scope-icon">i</span> Visual model only. No controller or physical dynamics in this phase.</p>
+        <section class="intro-row">
+          <div><p class="eyebrow">CLOSED-LOOP AZIMUTH + ELEVATION</p><h2>Two-axis pointing simulator</h2></div>
+          <div class="runtime-readout"><span><i class="live-dot"></i> SIM <b id="sim-time">0.00 s</b></span><span>CONTROL <b>50 Hz fixed step</b></span><span>DISPLAY <b>adaptive</b></span></div>
         </section>
 
-        <div class="workspace">
-          <aside class="control-column" aria-label="Pose controls">
-            <section class="panel control-panel">
-              <div class="panel-heading">
-                <div><p class="eyebrow">01 / REFERENCE</p><h3>Target direction</h3></div>
-                <span class="mini-badge cyan">COMMAND</span>
+        <section class="panel command-panel" aria-labelledby="command-title">
+          <div class="command-heading"><div><p class="eyebrow">01 / TRACKING REFERENCE</p><h3 id="command-title">Target command</h3></div><span class="command-note">Target is reference; true position evolves through the plant.</span></div>
+          <div class="command-controls">
+            <label class="profile-field">Tracking profile<select id="tracking-profile"><option value="step">Step</option><option value="ramp">Ramp to command</option><option value="sinusoidal">Sinusoidal</option><option value="pass">Satellite pass</option></select></label>
+            <label class="command-axis" for="target-az"><span>AZ <small>target</small></span><span class="number-entry"><input id="target-az-number" type="number" min="0" max="360" step="1" value="72" aria-label="Target azimuth in degrees" /><b>°</b></span><input id="target-az" type="range" min="0" max="360" step="1" value="72" /><small class="command-range"><span>000° N</span><span>090° E</span><span>180° S</span><span>270° W</span></small></label>
+            <label class="command-axis" for="target-el"><span>EL <small>target</small></span><span class="number-entry"><input id="target-el-number" type="number" min="0" max="90" step="1" value="38" aria-label="Target elevation in degrees" /><b>°</b></span><input id="target-el" type="range" min="0" max="90" step="1" value="38" /><small class="command-range"><span>0° horizon</span><span>90° zenith</span></small></label>
+            <label class="speed-field">Target speed <span><input id="target-speed" type="range" min="0.5" max="20" step="0.5" value="4" /><b><span id="target-speed-value">4.0</span> °/s</b></span></label>
+            <div class="run-controls"><button id="run-toggle" class="primary-button" type="button">Pause</button><button id="reset-all" class="secondary-button" type="button">Reset simulation</button><button id="emergency-stop" class="danger-button" type="button">Emergency stop</button><button id="rearm" class="secondary-button" type="button" disabled>Re-arm</button></div>
+          </div>
+          <div class="scenario-row"><label for="preset-select" class="eyebrow">SCENARIO</label><select id="preset-select"><option value="normal">Normal tracking</option><option value="poor-pid">Poor PID tuning</option><option value="backlash">Excessive backlash</option><option value="encoder">Encoder failure</option><option value="motor">Motor degradation</option><option value="wind">Wind disturbance</option><option value="delay">Communication delay</option><option value="multi">Multi-fault</option></select><button id="apply-preset" class="secondary-button" type="button">Load scenario</button><button id="clear-faults" class="quiet-button" type="button">Clear injected faults</button><span id="scenario-note" class="scenario-note">Nominal model parameters and healthy sensors.</span></div>
+        </section>
+
+        <section class="main-grid">
+          <div class="primary-column">
+            <section class="panel visualization-panel" aria-labelledby="view-title">
+              <div class="view-toolbar"><div><p class="eyebrow">ANTENNA ASSEMBLY</p><h3 id="view-title">Live pointing view</h3></div><div class="view-tools"><span class="view-mode"><i class="live-dot"></i> CLOSED LOOP</span><span class="view-scale">SCHEMATIC / NOT TO SCALE</span></div></div>
+              <div class="svg-wrap">
+                <svg id="antenna-svg" viewBox="0 0 1000 570" role="img" aria-labelledby="svg-title svg-desc">
+                  <title id="svg-title">Two-axis azimuth and elevation antenna simulation</title>
+                  <desc id="svg-desc">Solid cyan marks show simulated true antenna position. Dashed amber marks show the target reference. The compass is north referenced.</desc>
+                  <defs>
+                    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#253542" stroke-width="1" opacity=".55" /></pattern>
+                    <linearGradient id="dish-metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#dce8ec" /><stop offset=".55" stop-color="#879ba7" /><stop offset="1" stop-color="#5a6d78" /></linearGradient>
+                    <linearGradient id="feed-metal" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#f0c67d" /><stop offset="1" stop-color="#a66d2d" /></linearGradient>
+                    <marker id="arrow-actual" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#58d7d2" /></marker>
+                    <marker id="arrow-target" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#e6ad5c" /></marker>
+                  </defs>
+                  <rect width="1000" height="570" fill="#101a23" /><rect width="1000" height="570" fill="url(#grid)" /><path d="M0 450H1000" stroke="#52616a" stroke-width="1" opacity=".6" />
+                  <g font-family="inherit"><text x="42" y="54" class="svg-kicker">ELEVATION / SIDE VIEW</text><text x="685" y="54" class="svg-kicker">AZIMUTH / PLAN VIEW</text><text x="42" y="82" class="svg-small">TRUE REFLECTOR ORIENTATION</text><text x="685" y="82" class="svg-small">HEADING FROM TRUE NORTH</text></g>
+                  <g id="elevation-scene">
+                    <path d="M105 450L204 338H266L365 450Z" fill="#192731" stroke="#32434e" stroke-width="1.5" /><path d="M80 450H403M120 425H358M150 398H330M180 370H300" stroke="#344751" stroke-width="1" opacity=".8" />
+                    <path d="M244 448L244 345L224 337L224 327L270 327L270 337L252 345V448Z" fill="#5e737e" stroke="#93a4ac" stroke-width="1.5" /><path d="M205 450H290L279 461H216Z" fill="#3b4e59" stroke="#8999a1" stroke-width="1.3" /><path d="M211 326H284V338H211Z" fill="#81949e" stroke="#c2cdd1" stroke-width="1.2" /><circle cx="247" cy="322" r="8" fill="#19252e" stroke="#58d7d2" stroke-width="2" />
+                    <line id="target-elevation-vector" x1="247" y1="322" x2="430" y2="322" class="target-vector" marker-end="url(#arrow-target)" /><line id="actual-elevation-vector" x1="247" y1="322" x2="430" y2="322" class="actual-vector" marker-end="url(#arrow-actual)" />
+                    <g id="dish-assembly"><path d="M247 322L352 254M247 322L352 390" class="dish-support" /><path d="M350 248Q416 322 350 396L350 248Z" fill="url(#dish-metal)" stroke="#d4e0e4" stroke-width="2" /><path d="M350 248Q416 322 350 396" fill="none" stroke="#e8f0f2" stroke-width="3" /><path d="M353 322H424" class="feed-arm" /><rect x="420" y="313" width="16" height="18" rx="3" fill="url(#feed-metal)" stroke="#f5d9a7" stroke-width="1.2" /><circle cx="351" cy="322" r="6" fill="#dfe9eb" stroke="#42535d" stroke-width="2" /></g>
+                    <text id="elevation-angle-label" x="292" y="294" class="svg-angle">31° EL</text>
+                    <g transform="translate(52 500)"><line x1="0" y1="0" x2="30" y2="0" class="actual-vector legend-line" /><text x="40" y="4" class="svg-legend">TRUE ANTENNA POSITION</text><line x1="210" y1="0" x2="240" y2="0" class="target-vector legend-line" /><text x="250" y="4" class="svg-legend">TARGET REFERENCE</text></g>
+                  </g>
+                  <g id="compass" aria-hidden="true"><circle cx="786" cy="292" r="156" fill="#121f29" stroke="#52636e" stroke-width="1.4" /><circle cx="786" cy="292" r="126" fill="none" stroke="#354752" /><circle cx="786" cy="292" r="94" fill="none" stroke="#2a3a45" stroke-dasharray="2 5" /><path d="M786 125V459M619 292H953M668 174L904 410M904 174L668 410" stroke="#334650" /><path d="M786 123L779 140H793Z" fill="#e6ad5c" /><text x="786" y="111" text-anchor="middle" class="compass-cardinal north">N</text><text x="962" y="297" text-anchor="middle" class="compass-cardinal">E</text><text x="786" y="489" text-anchor="middle" class="compass-cardinal">S</text><text x="610" y="297" text-anchor="middle" class="compass-cardinal">W</text><text x="786" y="273" text-anchor="middle" class="compass-center-label">AZ</text><circle cx="786" cy="292" r="5" fill="#dce5e8" /><line id="target-azimuth-vector" x1="786" y1="292" x2="786" y2="166" class="target-vector compass-vector" marker-end="url(#arrow-target)" /><line id="actual-azimuth-vector" x1="786" y1="292" x2="786" y2="166" class="actual-vector compass-vector" marker-end="url(#arrow-actual)" /><g class="compass-readouts"><rect x="634" y="516" width="144" height="31" rx="4" class="readout-chip" /><text x="646" y="536" class="chip-label">TRUE</text><text id="compass-actual" x="708" y="536" class="chip-value">048°</text><rect x="790" y="516" width="156" height="31" rx="4" class="readout-chip target-chip" /><text x="802" y="536" class="chip-label target-text">TGT</text><text id="compass-target" x="864" y="536" class="chip-value target-text">072°</text></g></g>
+                </svg>
               </div>
-              <p class="panel-copy">Set the requested pointing direction. The dashed vectors show this reference.</p>
-              <label class="angle-control" for="target-az">
-                <span class="control-label">Target azimuth <small>AZ</small></span>
-                <span class="value-entry"><input id="target-az-number" type="number" min="0" max="360" step="1" value="72" aria-label="Target azimuth in degrees" /><span>deg</span></span>
-                <input id="target-az" type="range" min="0" max="360" step="1" value="72" />
-                <span class="range-labels"><span>N · 000°</span><span>090°</span><span>180°</span><span>270°</span><span>N · 360°</span></span>
-              </label>
-              <label class="angle-control" for="target-el">
-                <span class="control-label">Target elevation <small>EL</small></span>
-                <span class="value-entry"><input id="target-el-number" type="number" min="0" max="90" step="1" value="38" aria-label="Target elevation in degrees" /><span>deg</span></span>
-                <input id="target-el" type="range" min="0" max="90" step="1" value="38" />
-                <span class="range-labels two"><span>Horizon · 0°</span><span>Zenith · 90°</span></span>
-              </label>
+              <div class="visual-footer"><span><i class="legend-dot actual-dot"></i> Solid = true plant position</span><span><i class="legend-dot target-dot"></i> Dashed = reference</span><span class="visual-loop"><i class="live-dot"></i> FEEDBACK LOOP ACTIVE</span></div>
             </section>
 
-            <section class="panel control-panel actual-panel">
-              <div class="panel-heading">
-                <div><p class="eyebrow">02 / DISPLAYED POSE</p><h3>Antenna direction</h3></div>
-                <span class="mini-badge amber">ACTUAL*</span>
-              </div>
-              <p class="panel-copy">Move the illustration independently to compare it with the target. This is not yet a simulated plant.</p>
-              <label class="angle-control" for="antenna-az">
-                <span class="control-label">Antenna azimuth <small>AZ</small></span>
-                <span class="value-entry"><input id="antenna-az-number" type="number" min="0" max="360" step="1" value="48" aria-label="Antenna azimuth in degrees" /><span>deg</span></span>
-                <input id="antenna-az" type="range" min="0" max="360" step="1" value="48" />
-              </label>
-              <label class="angle-control" for="antenna-el">
-                <span class="control-label">Antenna elevation <small>EL</small></span>
-                <span class="value-entry"><input id="antenna-el-number" type="number" min="0" max="90" step="1" value="31" aria-label="Antenna elevation in degrees" /><span>deg</span></span>
-                <input id="antenna-el" type="range" min="0" max="90" step="1" value="31" />
-              </label>
-              <button id="reset-view" class="secondary-button" type="button"><span aria-hidden="true">↺</span> Reset view</button>
+            <div class="graph-section-heading"><p class="eyebrow">REAL-TIME TELEMETRY</p><button id="clear-graphs" class="quiet-button" type="button">Clear graph history</button></div>
+            <section class="graph-grid" aria-label="Live simulation graphs">
+              <article class="panel chart-panel"><div class="chart-heading"><h3>Target / true position</h3><small>deg</small></div><div class="chart-legend"><span><i class="c-az"></i>AZ target / true</span><span><i class="c-el"></i>EL target / true</span></div><canvas id="chart-position" aria-label="Target and true position history"></canvas></article>
+              <article class="panel chart-panel"><div class="chart-heading"><h3>Tracking error</h3><small>deg</small></div><div class="chart-legend"><span><i class="c-az"></i>AZ</span><span><i class="c-el"></i>EL</span></div><canvas id="chart-error" aria-label="AZ and EL tracking error history"></canvas></article>
+              <article class="panel chart-panel"><div class="chart-heading"><h3>Controller output</h3><small>normalized</small></div><div class="chart-legend"><span><i class="c-az"></i>AZ</span><span><i class="c-el"></i>EL</span></div><canvas id="chart-control" aria-label="AZ and EL controller output history"></canvas></article>
+              <article class="panel chart-panel"><div class="chart-heading"><h3>Encoder feedback</h3><small>deg</small></div><div class="chart-legend"><span><i class="c-az"></i>AZ true / meas.</span><span><i class="c-el"></i>EL true / meas.</span></div><canvas id="chart-encoder" aria-label="True and measured encoder position history"></canvas></article>
             </section>
 
-            <div class="phase-callout">
-              <span class="callout-index">NEXT</span>
-              <p><strong>Phase 02</strong><br />Single-axis physical simulation</p>
-              <span class="callout-arrow" aria-hidden="true">→</span>
-            </div>
+            <section class="panel performance-panel"><div class="section-heading"><div><p class="eyebrow">02 / RESPONSE QUALITY</p><h3>Performance window</h3></div><button id="reset-metrics" class="quiet-button" type="button">Reset window</button></div><div class="metric-grid"><div><span>Rise time</span><strong id="metric-rise">—</strong></div><div><span>Overshoot</span><strong id="metric-overshoot">0.0%</strong></div><div><span>Settling time</span><strong id="metric-settling">—</strong></div><div><span>Steady-state error</span><strong id="metric-steady">0.00°</strong></div><div><span>RMS error</span><strong id="metric-rms">0.00°</strong></div><div><span>Maximum error</span><strong id="metric-max-error">0.00°</strong></div><div><span>Maximum effort</span><strong id="metric-effort">0%</strong></div></div></section>
+          </div>
+
+          <aside class="diagnostics-column">
+            <section class="panel health-panel"><div class="section-heading"><div><p class="eyebrow">03 / CONDITION MONITOR</p><h3>Subsystem health</h3></div><span id="health-overall-tag" class="health-badge green">GREEN</span></div><div class="health-list"><div><span>Mechanical</span><b id="health-mechanical" class="health-tag green">GREEN</b></div><div><span>Motor / thermal</span><b id="health-motor" class="health-tag green">GREEN</b></div><div><span>Encoder feedback</span><b id="health-encoder" class="health-tag green">GREEN</b></div><div><span>Control performance</span><b id="health-control" class="health-tag green">GREEN</b></div></div><p class="threshold-note">Thresholds are model criteria, not hardware limits.</p></section>
+
+            <section class="panel telemetry-panel"><div class="section-heading"><div><p class="eyebrow">04 / LIVE SIGNALS</p><h3>Axis telemetry</h3></div><span class="unit-label">AZ / EL</span></div><div class="axis-telemetry"><div class="axis-telemetry-head"><b>AZ</b><span id="encoder-status-az" class="sensor-state valid">VALID</span></div><div class="telemetry-row"><span>True / encoder</span><strong><i id="az-true">048.0</i>° / <i id="az-measured">048.0</i>°</strong></div><div class="telemetry-row"><span>Position error</span><strong id="az-error">+24.0°</strong></div><div class="telemetry-row"><span>Velocity / accel.</span><strong><i id="az-velocity">0.00</i>°/s / <i id="az-acceleration">0.00</i>°/s²</strong></div><div class="telemetry-row"><span>Motor output</span><strong><i id="az-output">0</i>% <em id="az-saturation">—</em></strong></div></div><div class="axis-telemetry"><div class="axis-telemetry-head"><b>EL</b><span id="encoder-status-el" class="sensor-state valid">VALID</span></div><div class="telemetry-row"><span>True / encoder</span><strong><i id="el-true">031.0</i>° / <i id="el-measured">031.0</i>°</strong></div><div class="telemetry-row"><span>Position error</span><strong id="el-error">+7.0°</strong></div><div class="telemetry-row"><span>Velocity / accel.</span><strong><i id="el-velocity">0.00</i>°/s / <i id="el-acceleration">0.00</i>°/s²</strong></div><div class="telemetry-row"><span>Motor output</span><strong><i id="el-output">0</i>% <em id="el-saturation">—</em></strong></div></div></section>
+
+            <section class="panel actuator-panel"><div class="section-heading"><div><p class="eyebrow">05 / ACTUATION</p><h3>Drive status</h3></div><span id="motor-state" class="sensor-state valid">AVAILABLE</span></div><div class="telemetry-row"><span>AZ torque / speed</span><strong><i id="az-torque">0.00</i> N·m / <i id="az-rpm">0</i> rpm</strong></div><div class="telemetry-row"><span>EL torque / speed</span><strong><i id="el-torque">0.00</i> N·m / <i id="el-rpm">0</i> rpm</strong></div><div class="telemetry-row"><span>Available torque</span><strong><i id="available-torque">1.20</i> N·m</strong></div><div class="thermal-track"><span id="thermal-bar"></span></div><div class="thermal-caption"><span>Motor thermal proxy</span><b id="thermal-value">0%</b></div></section>
+
+            <section class="panel controller-panel"><div class="section-heading"><div><p class="eyebrow">06 / CONTROL LAW</p><h3>PID contributions</h3></div></div><div class="controller-table"><div></div><b>P</b><b>I</b><b>D</b><b>SUM</b><span>AZ</span><strong id="az-p">0.00</strong><strong id="az-i">0.00</strong><strong id="az-d">0.00</strong><strong id="az-sum">0.00</strong><span>EL</span><strong id="el-p">0.00</strong><strong id="el-i">0.00</strong><strong id="el-d">0.00</strong><strong id="el-sum">0.00</strong></div></section>
+
+            <section class="panel safety-panel"><div class="section-heading"><div><p class="eyebrow">07 / INDEPENDENT SAFETY</p><h3>Safety manager</h3></div><span id="safety-state" class="state-badge normal">NORMAL</span></div><p id="safety-reason" class="safety-reason">Limits clear; watchdog heartbeat current.</p><div class="watchdog-row"><span>Watchdog</span><b id="watchdog-status">HEARTBEAT OK</b></div><div class="watchdog-row"><span>Limit status</span><b id="limit-status">CLEAR</b></div><button id="safety-rearm" class="secondary-button wide-button" type="button" disabled>Re-arm system</button></section>
           </aside>
+        </section>
 
-          <section class="panel visualization-panel" aria-labelledby="view-title">
-            <div class="view-toolbar">
-              <div><p class="eyebrow">ANTENNA ASSEMBLY</p><h3 id="view-title">Live pointing view</h3></div>
-              <div class="view-tools"><span class="view-mode"><span class="status-dot"></span> SCHEMATIC</span><span class="view-scale">NOT TO SCALE</span></div>
-            </div>
-            <div class="svg-wrap">
-              <svg id="antenna-svg" viewBox="0 0 1000 570" role="img" aria-labelledby="svg-title svg-desc">
-                <title id="svg-title">Two-axis azimuth and elevation antenna visualization</title>
-                <desc id="svg-desc">A schematic satellite dish with a side elevation view and a compass azimuth view. Solid marks show antenna pose and dashed marks show target direction.</desc>
-                <defs>
-                  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#253542" stroke-width="1" opacity=".55" /></pattern>
-                  <linearGradient id="dish-metal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#dce8ec" /><stop offset=".55" stop-color="#879ba7" /><stop offset="1" stop-color="#5a6d78" /></linearGradient>
-                  <linearGradient id="feed-metal" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#f0c67d" /><stop offset="1" stop-color="#a66d2d" /></linearGradient>
-                  <marker id="arrow-actual" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#58d7d2" /></marker>
-                  <marker id="arrow-target" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9Z" fill="#e6ad5c" /></marker>
-                </defs>
-                <rect width="1000" height="570" fill="#101a23" />
-                <rect width="1000" height="570" fill="url(#grid)" />
-                <path d="M0 450H1000" stroke="#52616a" stroke-width="1" opacity=".6" />
+        <section class="lower-grid">
+          <section class="panel event-panel"><div class="section-heading"><div><p class="eyebrow">08 / EVENT RECORD</p><h3>System event log</h3></div><button id="clear-events" class="quiet-button" type="button">Clear log</button></div><ol id="event-log" class="event-log" aria-live="polite"></ol></section>
+          <section class="panel demo-panel"><div class="section-heading"><div><p class="eyebrow">05-MINUTE WALKTHROUGH</p><h3>Demonstration mode</h3></div><button id="demo-start" class="secondary-button" type="button">Start demo</button></div><div class="demo-progress"><span id="demo-step-index">READY</span><strong id="demo-step-title">A guided control-system tour</strong></div><p id="demo-step-copy">Run the nominal tracker, introduce gearbox wear, observe a sensor fault and safe state, then compare motor degradation.</p><button id="demo-next" class="quiet-button" type="button" disabled>Next demonstration step →</button></section>
+        </section>
 
-                <g class="diagram-labels" font-family="inherit">
-                  <text x="42" y="54" class="svg-kicker">ELEVATION / SIDE VIEW</text>
-                  <text x="685" y="54" class="svg-kicker">AZIMUTH / PLAN VIEW</text>
-                  <text x="42" y="82" class="svg-small">REFLECTOR ORIENTATION</text>
-                  <text x="685" y="82" class="svg-small">HEADING FROM TRUE NORTH</text>
-                </g>
-
-                <g class="elevation-scene">
-                  <path d="M105 450L204 338H266L365 450Z" fill="#192731" stroke="#32434e" stroke-width="1.5" />
-                  <path d="M80 450H403M120 425H358M150 398H330M180 370H300" stroke="#344751" stroke-width="1" opacity=".8" />
-                  <path d="M244 448L244 345L224 337L224 327L270 327L270 337L252 345V448Z" fill="#5e737e" stroke="#93a4ac" stroke-width="1.5" />
-                  <path d="M205 450H290L279 461H216Z" fill="#3b4e59" stroke="#8999a1" stroke-width="1.3" />
-                  <path d="M211 326H284V338H211Z" fill="#81949e" stroke="#c2cdd1" stroke-width="1.2" />
-                  <circle cx="247" cy="322" r="8" fill="#19252e" stroke="#58d7d2" stroke-width="2" />
-                  <line id="target-elevation-vector" x1="247" y1="322" x2="430" y2="322" class="target-vector" marker-end="url(#arrow-target)" />
-                  <line id="actual-elevation-vector" x1="247" y1="322" x2="430" y2="322" class="actual-vector" marker-end="url(#arrow-actual)" />
-                  <g id="dish-assembly" transform="rotate(-31 247 322)">
-                    <path d="M247 322L352 254M247 322L352 390" class="dish-support" />
-                    <path d="M350 248Q416 322 350 396L350 248Z" fill="url(#dish-metal)" stroke="#d4e0e4" stroke-width="2" />
-                    <path d="M350 248Q416 322 350 396" fill="none" stroke="#e8f0f2" stroke-width="3" />
-                    <path d="M353 322H424" class="feed-arm" />
-                    <rect x="420" y="313" width="16" height="18" rx="3" fill="url(#feed-metal)" stroke="#f5d9a7" stroke-width="1.2" />
-                    <circle cx="351" cy="322" r="6" fill="#dfe9eb" stroke="#42535d" stroke-width="2" />
-                  </g>
-                  <path d="M247 322A58 58 0 0 0 296 273" id="elevation-arc" fill="none" stroke="#8ea1ab" stroke-width="1" stroke-dasharray="3 4" />
-                  <text id="elevation-angle-label" x="292" y="294" class="svg-angle">31° EL</text>
-                  <g transform="translate(52 500)">
-                    <line x1="0" y1="0" x2="30" y2="0" class="actual-vector legend-line" />
-                    <text x="40" y="4" class="svg-legend">ANTENNA POSE</text>
-                    <line x1="178" y1="0" x2="208" y2="0" class="target-vector legend-line" />
-                    <text x="218" y="4" class="svg-legend">TARGET REFERENCE</text>
-                  </g>
-                </g>
-
-                <g id="compass" class="compass" aria-hidden="true">
-                  <circle cx="786" cy="292" r="156" fill="#121f29" stroke="#52636e" stroke-width="1.4" />
-                  <circle cx="786" cy="292" r="126" fill="none" stroke="#354752" stroke-width="1" />
-                  <circle cx="786" cy="292" r="94" fill="none" stroke="#2a3a45" stroke-width="1" stroke-dasharray="2 5" />
-                  <path d="M786 125V459M619 292H953M668 174L904 410M904 174L668 410" stroke="#334650" stroke-width="1" />
-                  <path d="M786 123L779 140H793Z" fill="#e6ad5c" />
-                  <text x="786" y="111" text-anchor="middle" class="compass-cardinal north">N</text>
-                  <text x="962" y="297" text-anchor="middle" class="compass-cardinal">E</text>
-                  <text x="786" y="489" text-anchor="middle" class="compass-cardinal">S</text>
-                  <text x="610" y="297" text-anchor="middle" class="compass-cardinal">W</text>
-                  <text x="786" y="273" text-anchor="middle" class="compass-center-label">AZ</text>
-                  <circle cx="786" cy="292" r="5" fill="#dce5e8" />
-                  <line id="target-azimuth-vector" x1="786" y1="292" x2="786" y2="166" class="target-vector compass-vector" marker-end="url(#arrow-target)" />
-                  <line id="actual-azimuth-vector" x1="786" y1="292" x2="786" y2="166" class="actual-vector compass-vector" marker-end="url(#arrow-actual)" />
-                  <g id="compass-readouts" class="compass-readouts">
-                    <rect x="634" y="516" width="144" height="31" rx="4" class="readout-chip" />
-                    <text x="646" y="536" class="chip-label">ANT</text><text id="compass-actual" x="708" y="536" class="chip-value">048°</text>
-                    <rect x="790" y="516" width="156" height="31" rx="4" class="readout-chip target-chip" />
-                    <text x="802" y="536" class="chip-label target-text">TGT</text><text id="compass-target" x="864" y="536" class="chip-value target-text">072°</text>
-                  </g>
-                </g>
-              </svg>
-            </div>
-            <div class="visual-footer">
-              <span><b class="legend-dot actual-dot"></b> Solid = displayed antenna pose</span>
-              <span><b class="legend-dot target-dot"></b> Dashed = target command</span>
-              <span class="update-state"><span class="status-dot"></span> VIEW UPDATED</span>
-            </div>
-          </section>
-
-          <aside class="readout-column" aria-label="Position readouts">
-            <section class="panel readout-panel">
-              <div class="panel-heading"><div><p class="eyebrow">03 / POSITION DATA</p><h3>Axis readout</h3></div><span class="readout-symbol" aria-hidden="true">⌁</span></div>
-              <div class="axis-readout">
-                <div class="axis-title"><span class="axis-code">AZ</span><span>AZIMUTH</span></div>
-                <div class="readout-rows"><div><span>Target</span><strong id="readout-target-az">072.0°</strong></div><div><span>Antenna*</span><strong id="readout-antenna-az">048.0°</strong></div><div class="error-row"><span>Visual delta</span><strong id="readout-error-az">+24.0°</strong></div></div>
-                <div class="limit-track"><span class="limit-marker" id="az-target-marker"></span><span class="pose-marker" id="az-antenna-marker"></span></div>
-                <div class="limit-labels"><span>0°</span><span>360° · wrap</span></div>
-              </div>
-              <div class="axis-readout">
-                <div class="axis-title"><span class="axis-code el-code">EL</span><span>ELEVATION</span></div>
-                <div class="readout-rows"><div><span>Target</span><strong id="readout-target-el">038.0°</strong></div><div><span>Antenna*</span><strong id="readout-antenna-el">031.0°</strong></div><div class="error-row"><span>Visual delta</span><strong id="readout-error-el">+7.0°</strong></div></div>
-                <div class="limit-track"><span class="limit-marker" id="el-target-marker"></span><span class="pose-marker" id="el-antenna-marker"></span></div>
-                <div class="limit-labels"><span>0° · horizon</span><span>90° · zenith</span></div>
-              </div>
-            </section>
-
-            <section class="panel legend-panel">
-              <p class="eyebrow">MODEL BOUNDARY</p>
-              <p><strong>*Antenna pose is directly adjustable.</strong> Phase 1 displays angular geometry only; command tracking, inertia, actuator response and feedback are not implemented yet.</p>
-              <div class="boundary-list"><span><i class="boundary-square target-square"></i> Target reference</span><span><i class="boundary-square actual-square"></i> Displayed pose</span></div>
-            </section>
-
-            <div class="range-note"><span class="range-icon">↗</span><span>Axis convention<br /><b>AZ 000° = North</b><br /><b>EL 000° = Horizon</b></span></div>
-          </aside>
-        </div>
+        <section class="settings-section"><div class="section-heading settings-heading"><div><p class="eyebrow">09 / MODEL CONFIGURATION</p><h3>Engineering parameters and fault injection</h3></div><p>Expand a subsystem to tune the running model.</p></div><div class="settings-grid">
+          <details class="panel settings-card"><summary><span>Controller / PID</span><small>gains · limits · anti-windup</small></summary><div class="settings-fields"><label>Kp<input data-config="pid.kp" type="number" min="0" step="0.01" value="0.16" /></label><label>Ki<input data-config="pid.ki" type="number" min="0" step="0.001" value="0.035" /></label><label>Kd<input data-config="pid.kd" type="number" min="0" step="0.01" value="0.10" /></label><label>Derivative filter τ (s)<input data-config="pid.derivativeFilter" type="number" min="0" step="0.01" value="0.12" /></label><label>Output limit (0–1)<input data-config="pid.outputLimit" type="number" min="0.05" max="1" step="0.05" value="0.9" /></label><label>Integral limit<input data-config="pid.integralLimit" type="number" min="0" step="0.05" value="0.4" /></label><label class="check-field"><input data-config="pid.antiWindup" type="checkbox" checked /> Conditional anti-windup</label><button id="reset-controller" class="quiet-button" type="button">Reset controller state</button></div></details>
+          <details class="panel settings-card"><summary><span>Mechanics / gearbox</span><small>inertia · friction · limits · lost motion</small></summary><div class="settings-fields"><label>AZ inertia (kg·m²)<input data-config="mechanics.inertiaAz" type="number" min="1" step="1" value="18" /></label><label>EL inertia (kg·m²)<input data-config="mechanics.inertiaEl" type="number" min="1" step="1" value="14" /></label><label>Max speed (°/s)<input data-config="mechanics.maxSpeed" type="number" min="0.1" step="0.5" value="10" /></label><label>Max acceleration (°/s²)<input data-config="mechanics.maxAcceleration" type="number" min="0.1" step="0.5" value="18" /></label><label>Friction (N·m)<input data-config="mechanics.friction" type="number" min="0" step="0.01" value="0.08" /></label><label>AZ lower limit (°)<input data-config="mechanics.azMin" type="number" step="1" value="0" /></label><label>AZ upper limit (°)<input data-config="mechanics.azMax" type="number" step="1" value="360" /></label><label>EL lower limit (°)<input data-config="mechanics.elMin" type="number" step="1" value="0" /></label><label>EL upper limit (°)<input data-config="mechanics.elMax" type="number" step="1" value="90" /></label><label>Gear ratio<input data-config="gearbox.ratio" type="number" min="1" step="1" value="60" /></label><label>Gear efficiency (0–1)<input data-config="gearbox.efficiency" type="number" min="0.1" max="1" step="0.01" value="0.82" /></label><label>Backlash (°)<input data-config="gearbox.backlash" type="number" min="0" step="0.05" value="0.25" /></label></div></details>
+          <details class="panel settings-card"><summary><span>Motor / actuator</span><small>torque · speed · response · degradation</small></summary><div class="settings-fields"><label>Max torque (N·m)<input data-config="motor.maxTorque" type="number" min="0.01" step="0.01" value="0.08" /></label><label>Max speed (rpm)<input data-config="motor.maxSpeedRPM" type="number" min="10" step="10" value="120" /></label><label>Response time (s)<input data-config="motor.responseTime" type="number" min="0.01" step="0.01" value="0.16" /></label><label>Degradation (%)<input data-config-percent="motor.degradation" type="number" min="0" max="95" step="5" value="0" /></label><button id="reset-motor-thermal" class="quiet-button" type="button">Cool motor proxy</button></div></details>
+          <details class="panel settings-card"><summary><span>Encoder / communications</span><small>resolution · noise · offset · sample · delay</small></summary><div class="settings-fields"><label>Resolution (counts/rev)<input id="encoder-counts" type="number" min="64" step="256" value="7200" /></label><label>Noise amplitude (°)<input data-config="encoder.noiseDeg" type="number" min="0" step="0.01" value="0.01" /></label><label>Zero offset (°)<input data-config="encoder.offsetDeg" type="number" step="0.05" value="0" /></label><label>Sample rate (Hz)<input data-config="encoder.sampleRateHz" type="number" min="1" step="1" value="20" /></label><label>Feedback delay (s)<input data-config="communication.delay" type="number" min="0" step="0.05" value="0.04" /></label></div></details>
+          <details class="panel settings-card"><summary><span>Environment / disturbance</span><small>external and wind torque</small></summary><div class="settings-fields"><label>External disturbance (N·m)<input data-config="environment.disturbanceTorque" type="number" min="0" step="0.1" value="0.12" /></label><label>Wind torque (N·m)<input data-config="environment.windTorque" type="number" min="0" step="0.1" value="0.18" /></label><label>Random disturbance (N·m)<input data-config="environment.randomDisturbance" type="number" min="0" step="0.01" value="0.04" /></label></div></details>
+          <details class="panel settings-card fault-settings"><summary><span>Fault injection</span><small>faults modify model signals or capability</small></summary><div class="fault-toggles"><label><input data-fault="encoderDropout" type="checkbox" /> Encoder dropout / frozen feedback</label><label><input data-fault="excessiveBacklash" type="checkbox" /> Excessive gearbox backlash (×5)</label><label><input data-fault="increasedFriction" type="checkbox" /> Increased mechanical friction (×5)</label><label><input data-fault="motorSaturation" type="checkbox" /> Motor saturation cap (30% output)</label><label><input data-fault="watchdogStall" type="checkbox" /> Watchdog heartbeat stall</label><label class="watchdog-setting">Watchdog timeout (s)<input data-config="safety.watchdogTimeout" type="number" min="0.1" step="0.1" value="2" /></label></div></details>
+        </div></section>
+        <p class="disclaimer">Simplified electromechanical simulation for education and portfolio demonstration. Not a certified SATCOM control system.</p>
       </main>
-      <footer class="app-footer"><span>EDUCATIONAL / PORTFOLIO SIMULATOR</span><span>NOT A CERTIFIED SATCOM CONTROL SYSTEM</span><span>BUILD 01.01</span></footer>
+      <footer class="app-footer"><span>ENGINEERING TEST BENCH / FIXED-STEP MODEL</span><span>NO RF LINK OR ORBIT PROPAGATION MODEL</span><span>PHASE 14 COMPLETE</span></footer>
     </div>
   </body>
 </html>
