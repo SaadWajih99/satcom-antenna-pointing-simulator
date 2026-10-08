@@ -1,4 +1,4 @@
-import { resetSimulator, setFault, setTarget, rearmSimulator } from "../simulation/simulator.js";
+import { resetSimulator, setFault, setTarget, rearmSimulator } from "../simulation/simulator.js?v=phase14";
 
 const PRESETS = {
   normal: {

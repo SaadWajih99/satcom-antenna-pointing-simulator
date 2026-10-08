@@ -6,9 +6,9 @@ import {
   resetSimulator,
   setFault,
   setTarget,
-} from "../simulation/simulator.js";
-import { renderAntennaView, attachViewResize } from "./antennaView.js";
-import { applyPreset, clearFaults, DEMO_STEPS } from "./scenarios.js";
+} from "../simulation/simulator.js?v=phase14";
+import { renderAntennaView, attachViewResize } from "./antennaView.js?v=phase14";
+import { applyPreset, clearFaults, DEMO_STEPS } from "./scenarios.js?v=phase14";
 
 const HEALTH_CLASS = { GREEN: "green", YELLOW: "yellow", ORANGE: "orange", RED: "red" };
 const STATE_CLASS = { NORMAL: "normal", WARNING: "warning", DEGRADED: "degraded", FAULT: "fault", SAFE: "safe" };
