@@ -1,6 +1,8 @@
-# Phase 1: Antenna Visualization
+# Phase 1: Antenna Visualization (Historical)
 
-## Scope
+This document records the original visualization-only milestone. The current implementation has since added a coupled plant, controller, feedback, fault, health, safety, and performance model; use the root [README](../README.md) and [Model Reference](model-reference.md) for current behavior.
+
+## Original Scope
 
 Establish the static web application shell and a legible AZ/EL antenna pointing view. No physical dynamics or control behavior is in scope in this phase.
 
@@ -15,15 +17,15 @@ Establish the static web application shell and a legible AZ/EL antenna pointing 
 
 These differences describe geometry only. They are not control errors from sensor feedback.
 
-## Verification checklist
+## Original Verification Checklist
 
 - [x] Sliders and numeric fields are bounded and synchronized.
 - [x] Target and displayed pose are independent.
 - [x] AZ wraps through north for the displayed shortest signed difference.
 - [x] Elevation dish orientation changes with the displayed pose.
 - [x] Layout has responsive desktop and phone breakpoints.
-- [ ] Validate browser interaction at desktop and phone viewport sizes before Phase 2.
+- [x] Validate browser interaction at desktop and phone viewport sizes in the completed dashboard.
 
-## Next phase
+## Historical Next Phase
 
-Phase 2 adds a single-axis plant with state updated from deterministic simulation time. The visualization will then display a physically evolving position rather than a manually set pose.
+Phase 2 added a deterministic plant, later extended to two-axis AZ/EL control and the other subsystems described in the current documentation.
