@@ -1,0 +1,8 @@
+{
+  "name": "satcom-antenna-pointing-simulator",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/simulator.test.js"
+  }
+}
