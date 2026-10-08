@@ -1,6 +1,6 @@
-import { createSimulator, stepSimulator } from "./simulation/simulator.js";
-import { createTelemetryCharts } from "./ui/charts.js";
-import { createDashboard } from "./ui/dashboard.js";
+import { createSimulator, stepSimulator } from "./simulation/simulator.js?v=phase14";
+import { createTelemetryCharts } from "./ui/charts.js?v=phase14";
+import { createDashboard } from "./ui/dashboard.js?v=phase14";
 
 const FIXED_STEP = 0.02;
 const MAX_STEPS_PER_FRAME = 5;
